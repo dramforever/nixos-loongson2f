@@ -1,8 +1,7 @@
 {
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-  inputs.nixpkgs-pr-298515.url = "github:NixOS/nixpkgs/refs/pull/298515/head";
 
-  outputs = { self, nixpkgs, nixpkgs-pr-298515 }:
+  outputs = { self, nixpkgs }:
     let eachSystem = nixpkgs.lib.genAttrs [ "x86_64-linux" ];
     in {
       legacyPackages = eachSystem (system:
@@ -42,6 +41,7 @@
           linux_lemote2f =
             final.linuxManualConfig {
               inherit (final.linux) src modDirVersion;
+              # https://github.com/NixOS/nixpkgs/pull/302802
               config = final.read-linux-config ./lemote2f_config;
               version = "${final.linux.version}-lemote2f";
               configfile = ./lemote2f_config;
@@ -51,12 +51,15 @@
 
           read-linux-config = final.callPackage ./read-linux-config.nix {};
 
+          # FIXME: libressl doesn't work on MIPS?
           netcat = final.netcat-gnu;
 
+          # https://github.com/NixOS/nixpkgs/pull/298001
           gnupg24 = prev.gnupg24.overrideAttrs (old: {
             nativeBuildInputs = old.nativeBuildInputs ++ [ final.buildPackages.libgpg-error ];
           });
 
+          # https://github.com/NixOS/nixpkgs/pull/302859
           systemd = prev.systemd.overrideAttrs (old: {
             patches = old.patches ++ [
               (final.fetchpatch {
@@ -67,7 +70,8 @@
             ];
           });
 
-          inherit (final.callPackage (nixpkgs-pr-298515 + "/pkgs/development/misc/resholve") {}) resholve;
+          # https://github.com/NixOS/nixpkgs/pull/298515
+          inherit (final.callPackage ./resholve {}) resholve;
         };
 
       overlays.allow-modules-missing = self: super: {
