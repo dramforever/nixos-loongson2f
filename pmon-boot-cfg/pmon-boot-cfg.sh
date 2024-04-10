@@ -26,10 +26,9 @@ copyFile() {
 
 entry() {
     local hash label kpath kname ipath iname args init
-    # Silence warning about "non-constant source" 
-    # shellcheck disable=SC1090
-    source <(jq -r '
+    vars="$(jq -r '
         .["org.nixos.bootspec.v1"]
+        | if . then . else error("No org.nixos.bootspec.v1, time to update pmon-boot-cfg") end
         | (.toplevel | ltrimstr($storeDir) | capture("(?<hash>[^-]+)-(?<name>.+)")) as $match
         | [
             "local hash=\(@sh "\($match | .hash[:6])")",
@@ -44,7 +43,9 @@ entry() {
         | .[]
     ' \
         --arg storeDir "$storeDir/" \
-        < "$2/boot.json")
+        < "$2/boot.json")"
+    eval "$vars"
+
     copyFile "$kpath" "$target/nixos/$kname"
     copyFile "$ipath" "$target/nixos/$iname"
     cat <<END
