@@ -99,6 +99,8 @@
                 configureFlags = old.configureFlags ++ [ "--without-hardening" ];
               })
             else prev.openssh;
+
+          pmon-boot-cfg = final.callPackage ./pmon-boot-cfg {};
         };
 
       overlays.allow-modules-missing = self: super: {

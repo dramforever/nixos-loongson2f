@@ -2,9 +2,9 @@
 
 {
   boot = {
-    loader = {
-      grub.enable = false;
-      generic-extlinux-compatible.enable = true;
+    loader.external = {
+      enable = true;
+      installHook = "${lib.getExe pkgs.pmon-boot-cfg} ${builtins.storeDir} /boot '(wd0,0)'";
     };
 
     kernelPackages = pkgs.linuxPackages_lemote2f;
@@ -95,6 +95,8 @@
     usbutils
     w3m
     wpa_supplicant
+    gcc
+    binutils
   ];
 
   system.stateVersion = "21.11";
