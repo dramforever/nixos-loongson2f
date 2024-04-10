@@ -18,11 +18,13 @@
 
   fileSystems."/boot" = {
     device = "/dev/disk/by-label/sakimi-boot";
-    fsType = "ext2";
+    options = [ "noatime" ];
+    fsType = "vfat";
   };
 
   fileSystems."/" = {
     device = "/dev/disk/by-label/sakimi-nixos";
+    options = [ "noatime" ];
     fsType = "ext4";
   };
 
@@ -34,6 +36,7 @@
   systemd.shutdownRamfs.enable = false;
   services.nscd.enableNsncd = false;
   fonts.fontconfig.enable = false;
+  programs.less.lessopen = null;
 
   services = {
     getty.autologinUser = "root";

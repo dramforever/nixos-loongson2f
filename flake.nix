@@ -60,18 +60,21 @@
           });
 
           # https://github.com/NixOS/nixpkgs/pull/302859
-          systemd = prev.systemd.overrideAttrs (old: {
-            patches = old.patches ++ [
-              (final.fetchpatch {
-                name = "255-install-format-overflow.patch";
-                url = "https://gitweb.gentoo.org/repo/gentoo.git/plain/sys-apps/systemd/files/255-install-format-overflow.patch?id=a25cf19d6f0dd41643c17cdfebbd87fde5e0e336";
-                hash = "sha256-cysLY7KC+rmLNeKEE/DYTqMRqL7SSjBCRWuuZvU63zA=";
+          systemd =
+            if final.hostPlatform.isMips
+            then
+              prev.systemd.overrideAttrs (old: {
+                patches = old.patches ++ [
+                  (final.fetchpatch {
+                    url = "https://github.com/systemd/systemd/commit/8040fa55a1cbc34dede3205a902095ecd26c21e3.patch";
+                    sha256 = "0c6z7bsndbkb8m130jnjpsl138sfv3q171726n5vkyl2n9ihnavk";
+                  })
+                ];
               })
-            ];
-          });
+            else prev.systemd;
 
           # https://github.com/NixOS/nixpkgs/pull/298515
-          inherit (final.callPackage ./resholve {}) resholve;
+          # inherit (final.callPackage ./resholve {}) resholve;
         };
 
       overlays.allow-modules-missing = self: super: {
