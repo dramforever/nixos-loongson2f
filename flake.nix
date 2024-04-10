@@ -45,6 +45,22 @@
               config = final.read-linux-config ./lemote2f_config;
               version = "${final.linux.version}-lemote2f";
               configfile = ./lemote2f_config;
+              kernelPatches = [
+                {
+                  name = "ec_kb3310b";
+                  patch = (final.fetchpatch {
+                    url = "https://github.com/loongson-community/linux-2f/commit/08fda2d6be96684e4753e89fa54c33bb4553f621.patch";
+                    hash = "sha256-CRKovOD/tDNptUSPhDnpp8INH6zXIoPmfU29PNYapA8=";
+                  });
+                }
+                {
+                  name = "yeeloong_laptop";
+                  patch = (final.fetchpatch {
+                    url = "https://github.com/loongson-community/linux-2f/commit/ad2584dbce931975c4a1219bf4ac8099aaf636c2.patch";
+                    hash = "sha256-GB8l1e5Yb3WIuiiiXorBsEKdDAjQdH7kvepkF+Rbjr8=";
+                  });
+                }
+              ];
             };
 
           linuxPackages_lemote2f = final.linuxPackagesFor final.linux_lemote2f;
@@ -75,6 +91,14 @@
 
           # https://github.com/NixOS/nixpkgs/pull/298515
           # inherit (final.callPackage ./resholve {}) resholve;
+
+          openssh =
+            if final.hostPlatform.isMips
+            then
+              prev.openssh.overrideAttrs (old: {
+                configureFlags = old.configureFlags ++ [ "--without-hardening" ];
+              })
+            else prev.openssh;
         };
 
       overlays.allow-modules-missing = self: super: {
