@@ -25,26 +25,23 @@ copyFile() {
 }
 
 entry() {
-    local hash label kpath kname ipath iname args init
-    vars="$(jq -r '
-        .["org.nixos.bootspec.v1"]
-        | if . then . else error("No org.nixos.bootspec.v1, time to update pmon-boot-cfg") end
-        | (.toplevel | ltrimstr($storeDir) | capture("(?<hash>[^-]+)-(?<name>.+)")) as $match
-        | [
-            "local hash=\(@sh "\($match | .hash[:6])")",
-            "local label=\(@sh "\(.label)")",
-            "local kpath=\(@sh "\(.kernel)")",
-            "local kname=\(@sh "\(.kernel | ltrimstr($storeDir) | sub("/";"-"))")",
-            "local ipath=\(@sh "\(.initrd)")",
-            "local iname=\(@sh "\(.initrd | ltrimstr($storeDir) | sub("/";"-"))")",
-            "local args=\(@sh "\(.kernelParams | join(" "))")",
-            "local init=\(@sh "\(.init)")"
-          ]
-        | .[]
-    ' \
-        --arg storeDir "$storeDir/" \
-        < "$2/boot.json")"
-    eval "$vars"
+    local system hash label kpath kname ipath iname args init
+    system="$(realpath "$2")"
+    if [[ "${system/#"$storeDir/"/}" =~ ([^-]+)-(.+) ]]; then
+        hash="${BASH_REMATCH[1]::6}"
+    else
+        echo "Unrecognized generation name $i" >&2
+        return
+    fi
+    label="$(cat "$system/nixos-version")"
+    kpath="$(realpath "$system/kernel")"
+    kname="${kpath/#"$storeDir/"/}"
+    kname="${kname//"/"/-}"
+    ipath="$(realpath "$system/initrd")"
+    iname="${ipath/#"$storeDir/"/}"
+    iname="${iname//"/"/-}"
+    args="$(cat "$system/kernel-params")"
+    init="$(realpath "$system/init")"
 
     copyFile "$kpath" "$target/nixos/$kname"
     copyFile "$ipath" "$target/nixos/$iname"
