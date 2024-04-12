@@ -35,6 +35,8 @@
   services.nscd.enableNsncd = false;
   programs.less.lessopen = null;
   services.timesyncd.enable = false;
+  systemd.services.audit.enable = false; # No audit on MIPS
+  networking.firewall.logRefusedConnections = false;
 
   fonts = {
     fontconfig.enable = true;
