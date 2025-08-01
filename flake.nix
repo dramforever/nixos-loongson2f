@@ -16,19 +16,16 @@
               autoModules = false;
             };
             gcc = {
-              arch = "loongson2f";
+              arch = "mips3";
               float = "hard";
               abi = "64";
             };
-            emulator = pkgs:
-              let
-                mips64el = pkgs.lib.systems.elaborate pkgs.lib.systems.examples.mips64el-linux-gnuabi64;
-                qemu-user = mips64el.emulator pkgs;
-                qemu-user-wrapped = pkgs.writeShellScriptBin "qemu-mips64el-loongson2f" ''
-                  exec "${qemu-user}" -cpu Loongson-2F "$@"
-                '';
-              in
-                "${qemu-user-wrapped}/bin/qemu-mips64el-loongson2f";
+            rust = rec {
+              platform = builtins.fromJSON (builtins.readFile "${./rust}/mips64el_mips3-unknown-linux-gnuabi64.json");
+              rustcTargetSpec = "${./rust}/mips64el_mips3-unknown-linux-gnuabi64.json";
+              cargoShortTarget = "mips64el_mips3-unknown-linux-gnuabi64";
+              rustcTarget = cargoShortTarget;
+            };
           };
           overlays = [
             self.overlays.overlay
@@ -53,13 +50,13 @@
                     hash = "sha256-CRKovOD/tDNptUSPhDnpp8INH6zXIoPmfU29PNYapA8=";
                   });
                 }
-                {
-                  name = "yeeloong_laptop";
-                  patch = (final.fetchpatch {
-                    url = "https://github.com/loongson-community/linux-2f/commit/ad2584dbce931975c4a1219bf4ac8099aaf636c2.patch";
-                    hash = "sha256-GB8l1e5Yb3WIuiiiXorBsEKdDAjQdH7kvepkF+Rbjr8=";
-                  });
-                }
+                # {
+                #   name = "yeeloong_laptop";
+                #   patch = (final.fetchpatch {
+                #     url = "https://github.com/loongson-community/linux-2f/commit/ad2584dbce931975c4a1219bf4ac8099aaf636c2.patch";
+                #     hash = "sha256-GB8l1e5Yb3WIuiiiXorBsEKdDAjQdH7kvepkF+Rbjr8=";
+                #   });
+                # }
               ];
             };
 
@@ -68,26 +65,12 @@
           read-linux-config = final.callPackage ./read-linux-config.nix {};
 
           # FIXME: libressl doesn't work on MIPS?
-          netcat = final.netcat-gnu;
+          netcat = if final.hostPlatform.isMips then final.netcat-gnu else prev.netcat;
 
           # https://github.com/NixOS/nixpkgs/pull/298001
-          gnupg24 = prev.gnupg24.overrideAttrs (old: {
+          gnupg24 = if final.hostPlatform.isMips then prev.gnupg24.overrideAttrs (old: {
             nativeBuildInputs = old.nativeBuildInputs ++ [ final.buildPackages.libgpg-error ];
-          });
-
-          # https://github.com/NixOS/nixpkgs/pull/302859
-          systemd =
-            if final.hostPlatform.isMips
-            then
-              prev.systemd.overrideAttrs (old: {
-                patches = old.patches ++ [
-                  (final.fetchpatch {
-                    url = "https://github.com/systemd/systemd/commit/8040fa55a1cbc34dede3205a902095ecd26c21e3.patch";
-                    sha256 = "0c6z7bsndbkb8m130jnjpsl138sfv3q171726n5vkyl2n9ihnavk";
-                  })
-                ];
-              })
-            else prev.systemd;
+          }) else prev.gnupg24;
 
           # https://github.com/NixOS/nixpkgs/pull/298515
           # inherit (final.callPackage ./resholve {}) resholve;
@@ -100,15 +83,20 @@
               })
             else prev.openssh;
 
+          pcre2 =
+            if final.hostPlatform.isMips
+            then
+              prev.pcre2.overrideAttrs (old: {
+                nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ final.buildPackages.autoreconfHook ];
+              })
+            else prev.pcre2;
+
           pmon-boot-cfg = final.callPackage ./pmon-boot-cfg {};
         };
 
       overlays.allow-modules-missing = self: super: {
-        makeModulesClosure = { kernel, firmware, rootModules, allowMissing ? true }:
-          super.callPackage "${super.path}/pkgs/build-support/kernel/modules-closure.nix" {
-            inherit kernel firmware rootModules;
-            allowMissing = true;
-          };
+        makeModulesClosure = args:
+          super.callPackage "${super.path}/pkgs/build-support/kernel/modules-closure.nix" (args // { allowMissing = true; });
       };
 
       nixosConfigurations.sakimi = nixpkgs.lib.nixosSystem {

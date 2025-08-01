@@ -42,7 +42,7 @@
     fontconfig.enable = true;
     packages = [
       pkgs.noto-fonts
-      pkgs.noto-fonts-cjk
+      pkgs.noto-fonts-cjk-sans
     ];
   };
 

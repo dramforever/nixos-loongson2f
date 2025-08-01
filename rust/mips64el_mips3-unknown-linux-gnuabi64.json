@@ -1,0 +1,36 @@
+{
+  "abi": "abi64",
+  "arch": "mips64",
+  "cpu": "mips3",
+  "crt-objects-fallback": "false",
+  "crt-static-respected": true,
+  "data-layout": "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128",
+  "dynamic-linking": true,
+  "env": "gnu",
+  "features": "+mips3,+xgot",
+  "has-rpath": true,
+  "has-thread-local": true,
+  "linker-flavor": "gnu-cc",
+  "llvm-abiname": "n64",
+  "llvm-target": "mips64el-unknown-linux-gnuabi64",
+  "max-atomic-width": 64,
+  "metadata": {
+    "description": "MIPS64 (MIPS3) Linux, N64 ABI (kernel 4.4, glibc 2.23)",
+    "host_tools": true,
+    "std": true,
+    "tier": 3
+  },
+  "os": "linux",
+  "position-independent-executables": true,
+  "relro-level": "full",
+  "supported-split-debuginfo": [
+    "packed",
+    "unpacked",
+    "off"
+  ],
+  "target-family": [
+    "unix"
+  ],
+  "target-mcount": "_mcount",
+  "target-pointer-width": "64"
+}
