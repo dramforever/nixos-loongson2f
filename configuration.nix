@@ -4,7 +4,9 @@
   boot = {
     loader.external = {
       enable = true;
-      installHook = "${lib.getExe pkgs.pmon-boot-cfg} ${builtins.storeDir} /boot '(wd0,0)'";
+      installHook = pkgs.writeShellScript "install-pmon-boot-cfg" ''
+        exec ${lib.getExe pkgs.pmon-boot-cfg} ${builtins.storeDir} /boot '(wd0,0)' "$@"
+      '';
     };
 
     kernelPackages = pkgs.linuxPackages_lemote2f;

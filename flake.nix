@@ -1,5 +1,5 @@
 {
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  inputs.nixpkgs.url = "github:dramforever/nixpkgs/rustcTarget-madness";
 
   outputs = { self, nixpkgs }:
     let eachSystem = nixpkgs.lib.genAttrs [ "x86_64-linux" ];
